@@ -5,6 +5,7 @@ import './App.css';
 function App() {
 
   const [file, setFile] = useState(null);
+  const [downloadLink, setDownloadLink] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
 
 
@@ -33,10 +34,18 @@ function App() {
             }
           }
         );
+
+        setDownloadLink(response.data.downloadLink);
         console.log(response.data);
       } catch (error) {
         console.error('Error uploading file:', error);
       }
+    }
+  };
+
+  const handleDownload = async () => {
+    if (downloadLink) {
+      window.open(downloadLink, '_blank'); // Open download link in a new tab
     }
   };
 
@@ -46,6 +55,10 @@ function App() {
         <input type="file" onChange={handleFileChange} />
         <button onClick={handleUpload}>Upload File</button>
         <div>{uploadProgress} %</div>
+        {downloadLink && <div>
+          <p>Download Link:</p>
+          <button onClick={handleDownload}>Download File</button>
+        </div>}
       </div>
     </div>
   );

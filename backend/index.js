@@ -1,10 +1,14 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
+const path = require('path'); // Import the path module
+const fs = require('fs'); // Import the fs module
 const app = express();
 const port = 5000;
 
 app.use(cors());
+
+app.use(express.static('uploads'));
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -21,7 +25,26 @@ app.post('/upload', upload.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('No files were uploaded.');
     }
-    res.send('File uploaded successfully!');
+
+    const uploadedFilePath = path.join(__dirname, 'uploads', req.file.filename);
+    const downloadLink = `http://localhost:5000/${req.file.filename}`;
+
+    res.json({ downloadLink }); // Send the download link back to the frontend
+});
+app.get('/download/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'uploads', filename);
+
+    try {
+        if (fs.existsSync(filePath)) {
+            res.download(filePath); // Send the file for download
+        } else {
+            res.status(404).send('File not found');
+        }
+    } catch (error) {
+        console.error('Error downloading file:', error);
+        res.status(500).send('Internal server error');
+    }
 });
 
 app.listen(port, () => {
