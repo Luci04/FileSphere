@@ -1,10 +1,13 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
-const path = require('path'); // Import the path module
-const fs = require('fs'); // Import the fs module
+const path = require('path');
+const fs = require('fs');
 const app = express();
-const port = 5000;
+
+require('dotenv').config()
+
+const PORT = process.env.PORT;
 
 app.use(cors());
 
@@ -27,10 +30,12 @@ app.post('/upload', upload.single('file'), (req, res) => {
     }
 
     const uploadedFilePath = path.join(__dirname, 'uploads', req.file.filename);
+
     const downloadLink = `http://localhost:5000/${req.file.filename}`;
 
     res.json({ downloadLink }); // Send the download link back to the frontend
 });
+
 app.get('/download/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, 'uploads', filename);
@@ -47,6 +52,6 @@ app.get('/download/:filename', (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
