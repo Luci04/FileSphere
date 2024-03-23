@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import axios from 'axios';
 import ProgressBar from "@ramonak/react-progress-bar";
 import './App.css';
+import { useDropzone } from 'react-dropzone'
+import { v4 as uuidv4 } from 'uuid';
+import JSZip from 'jszip';
+
 
 function App() {
 
@@ -10,13 +14,39 @@ function App() {
   const [uploadProgress, setUploadProgress] = useState(0);
 
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setUploadProgress('0');
-    handleUpload(e.target.files[0]);
-  };
+  const onDrop = useCallback(async acceptedFiles => {
+    const zip = new JSZip();
+
+    // Add each file/folder to the zip
+    acceptedFiles.forEach((file) => {
+      zip.file(file.name, file);
+    });
+
+    // Generate the zip file
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const zipFile = new File([zipBlob], `${uuidv4()}.zip`, { type: 'application/zip' });
+
+
+    // Upload or handle the zip file as needed
+
+    console.log(zipFile)
+
+    handleUpload(zipFile);
+  }, [])
+
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, multiple: true, webkitdirectory: true });
+
+  // const handleFileChange = (e) => {
+  //   setFile(e.target.files[0]);
+  //   setUploadProgress('0');
+  //   handleUpload(e.target.files[0]);
+  // };
 
   const handleUpload = async (targetFile) => {
+
+    console.log(targetFile);
+
     if (targetFile) {
       const formData = new FormData();
       formData.append('file', targetFile);
@@ -56,12 +86,15 @@ function App() {
     <div className="App">
       <div className="mainContainer">
         <div className="uploadContainer">
-          <div className='inputContainer'>
-            <label for="fileInput" class="fileInputLabel">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64zM432 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z" /></svg>
-            </label>
-            <input type="file" id='fileInput' className='file-input' onChange={handleFileChange} />
+          <div {...getRootProps()}>
+            <input {...getInputProps()} />
+            {
+              isDragActive ?
+                <p>Drop the files here ...</p> :
+                <p>Drag 'n' drop some files here, or click to select files</p>
+            }
           </div>
+
           {/* {downloadLink ? <div>
             <p>Download Link:</p>
             <button onClick={handleDownload}>Download File</button>
